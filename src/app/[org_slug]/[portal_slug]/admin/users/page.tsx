@@ -10,23 +10,22 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-interface PortalUser {
-  user_id: string
-  name: string
-  email: string
-  role_id: string
-  role_name: string
-}
-
 interface OrgUser {
   id: string
   name: string
   email: string
 }
 
-interface PortalRole {
+interface Role {
   id: string
   name: string
+  level: 'org' | 'portal'
+}
+
+function normaliseArray<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[]
+  if (raw && Array.isArray((raw as { data?: unknown }).data)) return (raw as { data: T[] }).data
+  return []
 }
 
 export default function PortalUsersPage() {
@@ -36,28 +35,11 @@ export default function PortalUsersPage() {
   const [selectedRoleId, setSelectedRoleId] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const { data: portalUsers, isLoading: usersLoading, mutate } = useSWR<PortalUser[]>(
-    portal ? `/org/portals/${portal.id}/users` : null,
-    () => apiFetch<PortalUser[]>(`/org/portals/${portal!.id}/users`),
-  )
+  const { data: rawOrgUsers } = useSWR('/org/users', () => apiFetch('/org/users'))
+  const orgUsers: OrgUser[] = normaliseArray(rawOrgUsers)
 
-  const { data: rawOrgUsers } = useSWR(
-    '/org/users',
-    () => apiFetch('/org/users'),
-  )
-  const orgUsers: OrgUser[] = Array.isArray(rawOrgUsers)
-    ? rawOrgUsers
-    : Array.isArray((rawOrgUsers as { data?: unknown })?.data)
-      ? (rawOrgUsers as { data: OrgUser[] }).data
-      : []
-
-  const { data: portalRoles } = useSWR<PortalRole[]>(
-    portal ? `/org/portals/${portal.id}/roles` : null,
-    () => apiFetch<PortalRole[]>(`/org/portals/${portal!.id}/roles`),
-  )
-
-  const assignedUserIds = new Set((portalUsers ?? []).map((u) => u.user_id))
-  const availableOrgUsers = (orgUsers ?? []).filter((u) => !assignedUserIds.has(u.id))
+  const { data: rawRoles } = useSWR('/org/roles', () => apiFetch('/org/roles'))
+  const portalRoles: Role[] = normaliseArray<Role>(rawRoles).filter((r) => r.level === 'portal')
 
   async function assign() {
     if (!portal || !selectedUserId || !selectedRoleId) return
@@ -67,7 +49,6 @@ export default function PortalUsersPage() {
         method: 'POST',
         body: JSON.stringify({ user_id: selectedUserId, role_id: selectedRoleId }),
       })
-      await mutate()
       setShowForm(false)
       setSelectedUserId('')
       setSelectedRoleId('')
@@ -80,24 +61,13 @@ export default function PortalUsersPage() {
     }
   }
 
-  async function removeUser(userId: string) {
-    if (!portal || !confirm('Remove this user from the portal?')) return
-    try {
-      await apiFetch(`/org/portals/${portal.id}/users/${userId}`, { method: 'DELETE' })
-      await mutate()
-      toast.success('User removed')
-    } catch {
-      toast.error('Failed to remove user')
-    }
-  }
-
-  if (portalLoading || usersLoading) return <LoadingSpinner />
+  if (portalLoading) return <LoadingSpinner />
 
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Portal Users</h1>
-        <Button onClick={() => setShowForm(true)} disabled={showForm || availableOrgUsers.length === 0}>
+        <Button onClick={() => setShowForm(true)} disabled={showForm}>
           Assign User
         </Button>
       </div>
@@ -114,7 +84,7 @@ export default function PortalUsersPage() {
                 className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
               >
                 <option value="">Select a user…</option>
-                {availableOrgUsers.map((u) => (
+                {orgUsers.map((u) => (
                   <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
                 ))}
               </select>
@@ -127,7 +97,7 @@ export default function PortalUsersPage() {
                 className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
               >
                 <option value="">Select a role…</option>
-                {(portalRoles ?? []).map((r) => (
+                {portalRoles.map((r) => (
                   <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
               </select>
@@ -142,30 +112,9 @@ export default function PortalUsersPage() {
         </Card>
       )}
 
-      {!portalUsers?.length ? (
-        <p className="text-sm text-gray-400 text-center py-12">No users assigned to this portal yet.</p>
-      ) : (
-        <div className="space-y-3">
-          {portalUsers.map((u) => (
-            <Card key={u.user_id}>
-              <CardContent className="pt-5 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">{u.name}</p>
-                  <p className="text-sm text-gray-500">{u.email} · {u.role_name}</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-600 hover:text-red-700"
-                  onClick={() => removeUser(u.user_id)}
-                >
-                  Remove
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <p className="text-sm text-gray-400 text-center py-8">
+        User listing for this portal is not yet available — pending backend endpoint.
+      </p>
     </div>
   )
 }
