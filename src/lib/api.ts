@@ -11,12 +11,15 @@ async function tryRefresh(): Promise<boolean> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refresh }),
     })
-    if (!res.ok) { clearTokens(); return false }
+    if (!res.ok) {
+      if (res.status < 500) clearTokens()
+      return false
+    }
     const data = await res.json()
     setAccessToken(data.access_token)
     return true
   } catch {
-    clearTokens()
+    // Network error — don't clear tokens, backend may be temporarily unreachable
     return false
   }
 }
