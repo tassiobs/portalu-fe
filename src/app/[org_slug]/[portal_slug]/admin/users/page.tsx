@@ -4,7 +4,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { toast } from 'sonner'
 import { usePortalAdmin } from '@/hooks/usePortalAdmin'
-import { apiFetch, ApiError } from '@/lib/api'
+import { apiFetch, ApiError, apiErrorMessage } from '@/lib/api'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -54,8 +54,7 @@ export default function PortalUsersPage() {
       setSelectedRoleId('')
       toast.success('User assigned to portal')
     } catch (err) {
-      const msg = ((err as ApiError).body as { message?: string })?.message ?? 'Failed to assign'
-      toast.error(msg)
+      toast.error(apiErrorMessage(err, 'Failed to assign'))
     } finally {
       setSaving(false)
     }

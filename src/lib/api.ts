@@ -27,6 +27,12 @@ export class ApiError extends Error {
   }
 }
 
+export function apiErrorMessage(err: unknown, fallback: string): string {
+  const e = err as ApiError
+  if (e?.status === 403) return 'Access denied'
+  return (e?.body as { message?: string })?.message ?? fallback
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {},

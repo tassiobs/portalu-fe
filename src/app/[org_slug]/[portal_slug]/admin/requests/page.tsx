@@ -4,7 +4,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { toast } from 'sonner'
 import { usePortalAdmin } from '@/hooks/usePortalAdmin'
-import { apiFetch, ApiError } from '@/lib/api'
+import { apiFetch, ApiError, apiErrorMessage } from '@/lib/api'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,7 +33,7 @@ export default function RequestsPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
-  const { data: requests, isLoading, mutate } = useSWR<Request[]>(
+  const { data: requests, isLoading, error: requestsError, mutate } = useSWR<Request[]>(
     portal ? `/org/portals/${portal.id}/requests` : null,
     () => apiFetch<Request[]>(`/org/portals/${portal!.id}/requests`),
   )
@@ -49,14 +49,14 @@ export default function RequestsPage() {
       await mutate()
       toast.success('Status updated')
     } catch (err) {
-      const msg = ((err as ApiError).body as { message?: string })?.message ?? 'Failed to update'
-      toast.error(msg)
+      toast.error(apiErrorMessage(err, 'Failed to update'))
     } finally {
       setUpdatingId(null)
     }
   }
 
   if (portalLoading || isLoading) return <LoadingSpinner />
+  if ((requestsError as ApiError)?.status === 403) return <p className="text-sm text-gray-500 py-8 text-center">Access denied.</p>
 
   const filtered =
     filterStatus === 'all'

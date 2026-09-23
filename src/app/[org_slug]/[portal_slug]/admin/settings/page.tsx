@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { usePortalAdmin } from '@/hooks/usePortalAdmin'
-import { apiFetch, ApiError } from '@/lib/api'
+import { apiFetch, apiErrorMessage } from '@/lib/api'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -44,8 +44,7 @@ export default function PortalSettingsPage() {
       await globalMutate('/org/portals')
       toast.success('Portal updated')
     } catch (err) {
-      const msg = ((err as ApiError).body as { message?: string })?.message ?? 'Failed to save'
-      toast.error(msg)
+      toast.error(apiErrorMessage(err, 'Failed to save'))
     } finally {
       setSaving(false)
     }
@@ -60,8 +59,7 @@ export default function PortalSettingsPage() {
       toast.success('Portal deleted')
       router.push('/dashboard')
     } catch (err) {
-      const msg = ((err as ApiError).body as { message?: string })?.message ?? 'Failed to delete'
-      toast.error(msg)
+      toast.error(apiErrorMessage(err, 'Failed to delete'))
       setDeleting(false)
     }
   }

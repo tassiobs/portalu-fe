@@ -4,7 +4,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { toast } from 'sonner'
 import { usePortalAdmin } from '@/hooks/usePortalAdmin'
-import { apiFetch, ApiError } from '@/lib/api'
+import { apiFetch, ApiError, apiErrorMessage } from '@/lib/api'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,7 +25,7 @@ export default function RequestTypesPage() {
   const [formDesc, setFormDesc] = useState('')
   const [saving, setSaving] = useState(false)
 
-  const { data: requestTypes, isLoading, mutate } = useSWR<RequestType[]>(
+  const { data: requestTypes, isLoading, error: rtError, mutate } = useSWR<RequestType[]>(
     portal ? `/org/portals/${portal.id}/request-types` : null,
     () => apiFetch<RequestType[]>(`/org/portals/${portal!.id}/request-types`),
   )
@@ -73,8 +73,7 @@ export default function RequestTypesPage() {
       }
       await mutate()
     } catch (err) {
-      const msg = ((err as ApiError).body as { message?: string })?.message ?? 'Failed to save'
-      toast.error(msg)
+      toast.error(apiErrorMessage(err, 'Failed to save'))
     } finally {
       setSaving(false)
     }
@@ -86,12 +85,13 @@ export default function RequestTypesPage() {
       await apiFetch(`/org/portals/${portal.id}/request-types/${id}`, { method: 'DELETE' })
       await mutate()
       toast.success('Request type deleted')
-    } catch {
-      toast.error('Failed to delete')
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Failed to delete'))
     }
   }
 
   if (portalLoading || isLoading) return <LoadingSpinner />
+  if ((rtError as ApiError)?.status === 403) return <p className="text-sm text-gray-500 py-8 text-center">Access denied.</p>
 
   return (
     <div className="max-w-3xl space-y-6">
