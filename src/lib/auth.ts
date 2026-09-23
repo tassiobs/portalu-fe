@@ -1,4 +1,4 @@
-import { apiFetch } from './api'
+import { apiFetch, ApiError } from './api'
 import { setAccessToken, setRefreshToken, clearTokens, getRefreshToken } from './tokens'
 import type { CurrentUser } from './permissions'
 
@@ -28,8 +28,9 @@ export async function rehydrate(): Promise<boolean> {
     )
     setAccessToken(data.access_token)
     return true
-  } catch {
-    clearTokens()
+  } catch (err) {
+    // Only invalidate stored tokens on explicit auth rejection, not server errors
+    if (err instanceof ApiError && err.status < 500) clearTokens()
     return false
   }
 }

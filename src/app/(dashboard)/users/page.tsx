@@ -37,13 +37,32 @@ interface Invitation {
   status: string
 }
 
+interface Role {
+  id: string
+  name: string
+  level: 'org' | 'portal'
+  portal_id?: string
+}
+
+interface Portal { id: string; name: string; slug: string }
+
+function normaliseArray<T>(raw: unknown): T[] {
+  if (Array.isArray(raw)) return raw as T[]
+  if (raw && Array.isArray((raw as { data?: unknown }).data)) return (raw as { data: T[] }).data
+  return []
+}
+
 export default function UsersPage() {
   const { user } = useAuth()
   const [page, setPage] = useState(1)
   const [activeTab, setActiveTab] = useState<'members' | 'invitations'>('members')
+
+  // Invite form
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteName, setInviteName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
+  const [selectedRoleId, setSelectedRoleId] = useState('')
+  const [selectedPortalId, setSelectedPortalId] = useState('')
   const [inviting, setInviting] = useState(false)
 
   const {
@@ -55,11 +74,64 @@ export default function UsersPage() {
     () => apiFetch<PaginatedUsers>(`/org/users?page=${page}&per_page=20`),
   )
 
-  const {
-    data: invitations,
-    isLoading: invitationsLoading,
-    mutate: mutateInvitations,
-  } = useSWR<Invitation[]>('/org/invitations', () => apiFetch<Invitation[]>('/org/invitations'))
+  const { data: invitations, isLoading: invitationsLoading, mutate: mutateInvitations } =
+    useSWR<Invitation[]>('/org/invitations', () => apiFetch<Invitation[]>('/org/invitations'))
+
+  const { data: portals } = useSWR<Portal[]>('/org/portals', () => apiFetch<Portal[]>('/org/portals'))
+
+  // Fetch all roles (org + portal) from single endpoint — only when form is open
+  const { data: rawAllRoles } = useSWR(
+    inviteOpen ? '/org/roles' : null,
+    () => apiFetch('/org/roles'),
+  )
+  const allRoles: Role[] = normaliseArray(rawAllRoles)
+  const orgRoles = allRoles.filter((r) => r.level === 'org')
+  const portalRoles = allRoles.filter((r) => r.level === 'portal')
+
+  const selectedRole = allRoles.find((r) => r.id === selectedRoleId)
+
+  function openInvite() {
+    setInviteName('')
+    setInviteEmail('')
+    setSelectedRoleId('')
+    setSelectedPortalId('')
+    setInviteOpen(true)
+  }
+
+  async function handleInvite() {
+    if (!inviteEmail.trim() || !selectedRoleId) return
+    setInviting(true)
+    try {
+      const created = await apiFetch<{ id: string }>('/org/users', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
+          ...(inviteName.trim() ? { name: inviteName.trim() } : {}),
+        }),
+      })
+
+      if (selectedRole?.level === 'portal' && selectedPortalId) {
+        await apiFetch(`/org/portals/${selectedPortalId}/users`, {
+          method: 'POST',
+          body: JSON.stringify({ user_id: created.id, role_id: selectedRoleId }),
+        })
+      } else {
+        await apiFetch(`/org/users/${created.id}/roles`, {
+          method: 'POST',
+          body: JSON.stringify({ role_id: selectedRoleId }),
+        })
+      }
+
+      await mutateUsers()
+      await mutateInvitations()
+      setWizOpen(false)
+      toast.success('Invitation sent')
+    } catch (err) {
+      toast.error(((err as ApiError).body as { message?: string })?.message ?? 'Failed to invite user')
+    } finally {
+      setInviting(false)
+    }
+  }
 
   async function deactivateUser(id: string) {
     if (!confirm('Deactivate this user?')) return
@@ -69,28 +141,6 @@ export default function UsersPage() {
       toast.success('User deactivated')
     } catch {
       toast.error('Failed to deactivate user')
-    }
-  }
-
-  async function sendInvite() {
-    if (!inviteName.trim() || !inviteEmail.trim()) return
-    setInviting(true)
-    try {
-      await apiFetch('/org/users', {
-        method: 'POST',
-        body: JSON.stringify({ name: inviteName, email: inviteEmail }),
-      })
-      await mutateUsers()
-      await mutateInvitations()
-      setInviteOpen(false)
-      setInviteName('')
-      setInviteEmail('')
-      toast.success('Invitation sent')
-    } catch (err) {
-      const msg = (err as ApiError).body ? ((err as ApiError).body as { message?: string })?.message ?? 'Failed to send invite' : 'Failed to send invite'
-      toast.error(msg)
-    } finally {
-      setInviting(false)
     }
   }
 
@@ -121,40 +171,68 @@ export default function UsersPage() {
       <div className="max-w-5xl space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
-          <Button onClick={() => setInviteOpen(!inviteOpen)}>Invite user</Button>
+          <Button onClick={openInvite} disabled={inviteOpen}>Invite user</Button>
         </div>
 
         {/* Invite form */}
         {inviteOpen && (
           <Card>
-            <CardHeader>
-              <CardTitle>Invite a new user</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4 items-end">
-                <div className="space-y-1 flex-1">
-                  <Label>Full name</Label>
-                  <Input
-                    value={inviteName}
-                    onChange={(e) => setInviteName(e.target.value)}
-                    placeholder="Jane Smith"
-                  />
+            <CardHeader><CardTitle>Invite user</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label>Full name <span className="text-gray-400 font-normal">(optional)</span></Label>
+                  <Input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Jane Smith" autoFocus />
                 </div>
-                <div className="space-y-1 flex-1">
+                <div className="space-y-1">
                   <Label>Email</Label>
-                  <Input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="jane@example.com"
-                  />
+                  <Input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="jane@example.com" />
                 </div>
-                <Button onClick={sendInvite} disabled={inviting}>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Role</Label>
+                <select
+                  value={selectedRoleId}
+                  onChange={(e) => { setSelectedRoleId(e.target.value); setSelectedPortalId('') }}
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">Select a role…</option>
+                  {orgRoles.length > 0 && (
+                    <optgroup label="Org">
+                      {orgRoles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </optgroup>
+                  )}
+                  {portalRoles.length > 0 && (
+                    <optgroup label="Portal">
+                      {portalRoles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </optgroup>
+                  )}
+                </select>
+              </div>
+
+              {selectedRole?.level === 'portal' && (
+                <div className="space-y-1">
+                  <Label>Portal</Label>
+                  <select
+                    value={selectedPortalId}
+                    onChange={(e) => setSelectedPortalId(e.target.value)}
+                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">Select a portal…</option>
+                    {(portals ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleInvite}
+                  disabled={inviting || !inviteEmail.trim() || !selectedRoleId || (selectedRole?.level === 'portal' && !selectedPortalId)}
+                >
                   {inviting ? 'Sending…' : 'Send invite'}
                 </Button>
-                <Button variant="outline" onClick={() => setInviteOpen(false)}>
-                  Cancel
-                </Button>
+                <Button variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
               </div>
             </CardContent>
           </Card>
@@ -200,9 +278,7 @@ export default function UsersPage() {
                       {usersData.data.map((u) => (
                         <tr key={u.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
-                            <a href={`/users/${u.id}`} className="text-blue-600 hover:underline font-medium">
-                              {u.name}
-                            </a>
+                            <a href={`/users/${u.id}`} className="text-blue-600 hover:underline font-medium">{u.name}</a>
                           </td>
                           <td className="px-6 py-4 text-gray-600">{u.email}</td>
                           <td className="px-6 py-4">
@@ -216,20 +292,13 @@ export default function UsersPage() {
                           <td className="px-6 py-4">
                             <div className="flex flex-wrap gap-1">
                               {u.org_roles?.map((r) => (
-                                <Badge key={r.id} variant="outline" className="text-xs">
-                                  {r.name}
-                                </Badge>
+                                <Badge key={r.id} variant="outline" className="text-xs">{r.name}</Badge>
                               ))}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-right">
                             {u.status !== 'inactive' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700"
-                                onClick={() => deactivateUser(u.id)}
-                              >
+                              <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={() => deactivateUser(u.id)}>
                                 Deactivate
                               </Button>
                             )}
@@ -238,29 +307,12 @@ export default function UsersPage() {
                       ))}
                     </tbody>
                   </table>
-
                   {totalPages > 1 && (
                     <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-                      <span className="text-sm text-gray-500">
-                        Page {page} of {totalPages}
-                      </span>
+                      <span className="text-sm text-gray-500">Page {page} of {totalPages}</span>
                       <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page === 1}
-                          onClick={() => setPage(page - 1)}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page >= totalPages}
-                          onClick={() => setPage(page + 1)}
-                        >
-                          Next
-                        </Button>
+                        <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>Previous</Button>
+                        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next</Button>
                       </div>
                     </div>
                   )}
@@ -293,29 +345,12 @@ export default function UsersPage() {
                       <tr key={inv.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 font-medium text-gray-900">{inv.name}</td>
                         <td className="px-6 py-4 text-gray-600">{inv.email}</td>
-                        <td className="px-6 py-4 text-gray-500">
-                          {new Date(inv.invited_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge variant="outline">{inv.status}</Badge>
-                        </td>
+                        <td className="px-6 py-4 text-gray-500">{new Date(inv.invited_at).toLocaleDateString()}</td>
+                        <td className="px-6 py-4"><Badge variant="outline">{inv.status}</Badge></td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex gap-2 justify-end">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => resendInvitation(inv.id)}
-                            >
-                              Resend
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => cancelInvitation(inv.id)}
-                            >
-                              Cancel
-                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => resendInvitation(inv.id)}>Resend</Button>
+                            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700" onClick={() => cancelInvitation(inv.id)}>Cancel</Button>
                           </div>
                         </td>
                       </tr>

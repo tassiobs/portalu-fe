@@ -1,11 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useState } from 'react'
 import Link from 'next/link'
 import { apiFetch, ApiError } from '@/lib/api'
+import { signIn } from '@/lib/auth'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,8 +23,9 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function SignUpPage() {
-  const [success, setSuccess] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const router = useRouter()
+  const { refresh } = useAuth()
 
   const {
     register,
@@ -32,31 +36,33 @@ export default function SignUpPage() {
   async function onSubmit(data: FormData) {
     setServerError(null)
     try {
-      await apiFetch('/auth/sign-up', {
+      const res = await apiFetch<{ verification_token?: string }>('/auth/sign-up', {
         method: 'POST',
         body: JSON.stringify(data),
       })
-      setSuccess(true)
+      if (res?.verification_token) {
+        try {
+          await apiFetch('/auth/verify-email', {
+            method: 'POST',
+            body: JSON.stringify({ token: res.verification_token }),
+          })
+        } catch {
+          // Backend may still have verified the email in DB before erroring — proceed to sign-in
+        }
+      }
+      await signIn(data.email, data.password)
+      await refresh()
+      router.push('/dashboard')
     } catch (err) {
       const apiErr = err as ApiError
+      const body = apiErr.body as { message?: string; detail?: string } | null
+      const raw = body?.message ?? body?.detail ?? 'Something went wrong'
       const msg =
-        (apiErr.body as { message?: string })?.message || 'Something went wrong'
+        raw === 'Email already registered'
+          ? 'This email is already registered. If you just signed up, there may be a temporary issue — please try signing in instead.'
+          : raw
       setServerError(msg)
     }
-  }
-
-  if (success) {
-    return (
-      <div className="text-center space-y-4">
-        <div className="text-green-600 font-medium text-lg">Check your email</div>
-        <p className="text-gray-600 text-sm">
-          We sent a verification link to your email. Please verify your account before signing in.
-        </p>
-        <Link href="/sign-in" className="text-blue-600 hover:underline text-sm">
-          Back to sign in
-        </Link>
-      </div>
-    )
   }
 
   return (

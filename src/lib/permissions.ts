@@ -18,6 +18,8 @@ export interface CurrentUser {
   name: string
   email: string
   status: string
+  org_id: string
+  org_slug: string
   org_roles: OrgRole[]
 }
 

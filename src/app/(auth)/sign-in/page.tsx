@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signIn } from '@/lib/auth'
 import { ApiError } from '@/lib/api'
+import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,6 +22,7 @@ type FormData = z.infer<typeof schema>
 
 export default function SignInPage() {
   const router = useRouter()
+  const { refresh } = useAuth()
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
@@ -33,6 +35,7 @@ export default function SignInPage() {
     setServerError(null)
     try {
       await signIn(data.email, data.password)
+      await refresh()
       router.push('/dashboard')
     } catch (err) {
       const apiErr = err as ApiError

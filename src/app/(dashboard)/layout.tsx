@@ -4,21 +4,15 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
-import { can, canAny } from '@/lib/permissions'
+import { can } from '@/lib/permissions'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { label: 'Dashboard', href: '/dashboard', permission: null },
-  { label: 'Profile', href: '/profile', permission: null },
+  { label: 'Portals', href: '/dashboard', permission: null },
   { label: 'Users', href: '/users', permission: 'org.users.manage' as const },
   { label: 'Roles', href: '/roles', permission: 'org.users.manage' as const },
-  {
-    label: 'Requests',
-    href: '/requests',
-    anyPermission: ['requests:read', 'requests:create'] as string[],
-  },
   { label: 'Settings', href: '/settings', permission: 'org.users.manage' as const },
 ]
 
@@ -47,7 +41,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             if (item.permission && !can(user, item.permission)) return null
-            if (item.anyPermission && !canAny(user, item.anyPermission)) return null
+
 
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
             return (
