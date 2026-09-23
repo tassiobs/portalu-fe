@@ -124,8 +124,8 @@ export default function UsersPage() {
 
       await mutateUsers()
       await mutateInvitations()
-      setWizOpen(false)
-      toast.success('Invitation sent')
+      setInviteOpen(false)
+      toast.success(`Invitation sent to ${inviteEmail.trim()}`)
     } catch (err) {
       toast.error(((err as ApiError).body as { message?: string })?.message ?? 'Failed to invite user')
     } finally {
