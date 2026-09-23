@@ -50,7 +50,8 @@ function AcceptInviteContent() {
       router.push('/sign-in?invited=1')
     } catch (err) {
       const apiErr = err as ApiError
-      const msg = (apiErr.body as { message?: string })?.message || 'Something went wrong'
+      const body = apiErr.body as { message?: string; detail?: string }
+      const msg = body?.message || body?.detail || 'Something went wrong'
       setServerError(msg)
     }
   }

@@ -20,6 +20,7 @@ interface OrgUser {
   email: string
   status: string
   org_roles: { id: string; name: string }[]
+  portal_roles: { id: string; name: string; portal_id: string; portal_name: string }[]
 }
 
 interface PaginatedUsers {
@@ -293,6 +294,11 @@ export default function UsersPage() {
                             <div className="flex flex-wrap gap-1">
                               {u.org_roles?.map((r) => (
                                 <Badge key={r.id} variant="outline" className="text-xs">{r.name}</Badge>
+                              ))}
+                              {u.portal_roles?.map((r) => (
+                                <Badge key={r.id} variant="outline" className="text-xs text-blue-600 border-blue-200">
+                                  {r.name} · {r.portal_name}
+                                </Badge>
                               ))}
                             </div>
                           </td>
