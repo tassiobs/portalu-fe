@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
+import { canPortal } from '@/lib/permissions'
 import { usePortalAdmin } from '@/hooks/usePortalAdmin'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/button'
@@ -18,12 +19,14 @@ export default function PortalAdminLayout({ children }: { children: React.ReactN
 
   const base = `/${org_slug}/${portal_slug}/admin`
 
+  const portalId = portal?.id ?? ''
+
   const navItems = [
-    { label: 'Overview', href: base },
-    { label: 'Request Types', href: `${base}/request-types` },
-    { label: 'Requests', href: `${base}/requests` },
-    { label: 'Users', href: `${base}/users` },
-    { label: 'Settings', href: `${base}/settings` },
+    { label: 'Overview', href: base, permission: null },
+    { label: 'Request Types', href: `${base}/request-types`, permission: 'portal.request_types:manage' },
+    { label: 'Requests', href: `${base}/requests`, permission: 'portal.requests:read' },
+    { label: 'Users', href: `${base}/users`, permission: 'portal.users:manage' },
+    { label: 'Settings', href: `${base}/settings`, permission: 'portal.settings:manage' },
   ]
 
   useEffect(() => {
@@ -64,6 +67,7 @@ export default function PortalAdminLayout({ children }: { children: React.ReactN
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
+            if (item.permission && !canPortal(user, portalId, item.permission)) return null
             const isActive =
               item.href === base ? pathname === base : pathname.startsWith(item.href)
             return (
