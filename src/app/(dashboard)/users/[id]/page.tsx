@@ -31,7 +31,9 @@ interface Portal { id: string; name: string }
 interface AssignedRole {
   id: string
   name: string
-  level?: 'org' | 'portal'
+  level: 'org' | 'portal'
+  portal_id: string | null
+  portal_name: string | null
 }
 
 function normaliseArray<T>(raw: unknown): T[] {
@@ -157,10 +159,11 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
             <div className="space-y-2">
               {assignedRoles.map((role) => (
                 <div key={role.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="outline">{role.name}</Badge>
-                    {role.level && (
-                      <span className="text-xs text-gray-400">{role.level}</span>
+                    <span className="text-xs text-gray-400">{role.level}</span>
+                    {role.portal_name && (
+                      <span className="text-xs text-gray-500">· {role.portal_name}</span>
                     )}
                   </div>
                   <Button
