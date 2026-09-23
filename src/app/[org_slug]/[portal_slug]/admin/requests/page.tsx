@@ -8,7 +8,7 @@ import { apiFetch, ApiError } from '@/lib/api'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface Request {
   id: string
