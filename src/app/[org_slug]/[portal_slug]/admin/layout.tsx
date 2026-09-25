@@ -62,7 +62,17 @@ export default function PortalAdminLayout({ children }: { children: React.ReactN
           <p className="text-base font-semibold text-gray-900 mt-1 truncate">
             {portal?.name ?? '…'}
           </p>
-          <span className="text-xs text-blue-500 font-medium">Admin</span>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs text-blue-500 font-medium">Admin</span>
+            <span className="text-gray-300">·</span>
+            <Link
+              href={`/${org_slug}/${portal_slug}`}
+              target="_blank"
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              View portal ↗
+            </Link>
+          </div>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
