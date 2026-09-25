@@ -1,14 +1,11 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState } from 'react'
 import Link from 'next/link'
 import { apiFetch, ApiError } from '@/lib/api'
-import { signIn } from '@/lib/auth'
-import { useAuth } from '@/context/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,8 +21,7 @@ type FormData = z.infer<typeof schema>
 
 export default function SignUpPage() {
   const [serverError, setServerError] = useState<string | null>(null)
-  const router = useRouter()
-  const { refresh } = useAuth()
+  const [registered, setRegistered] = useState(false)
 
   const {
     register,
@@ -36,23 +32,11 @@ export default function SignUpPage() {
   async function onSubmit(data: FormData) {
     setServerError(null)
     try {
-      const res = await apiFetch<{ verification_token?: string }>('/auth/sign-up', {
+      await apiFetch('/auth/sign-up', {
         method: 'POST',
         body: JSON.stringify(data),
       })
-      if (res?.verification_token) {
-        try {
-          await apiFetch('/auth/verify-email', {
-            method: 'POST',
-            body: JSON.stringify({ token: res.verification_token }),
-          })
-        } catch {
-          // Backend may still have verified the email in DB before erroring — proceed to sign-in
-        }
-      }
-      await signIn(data.email, data.password)
-      await refresh()
-      router.push('/dashboard')
+      setRegistered(true)
     } catch (err) {
       const apiErr = err as ApiError
       const body = apiErr.body as { message?: string; detail?: string } | null
@@ -63,6 +47,20 @@ export default function SignUpPage() {
           : raw
       setServerError(msg)
     }
+  }
+
+  if (registered) {
+    return (
+      <div className="space-y-4 text-center">
+        <h1 className="text-xl font-semibold text-gray-900">Check your email</h1>
+        <p className="text-sm text-gray-500">
+          We sent a verification link to your email address. Click it to activate your account, then sign in.
+        </p>
+        <Link href="/sign-in" className="text-sm text-blue-600 hover:underline">
+          Go to sign in
+        </Link>
+      </div>
+    )
   }
 
   return (
