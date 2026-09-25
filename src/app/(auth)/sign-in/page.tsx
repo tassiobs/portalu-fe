@@ -39,9 +39,12 @@ export default function SignInPage() {
       router.push('/dashboard')
     } catch (err) {
       const apiErr = err as ApiError
-      const msg =
-        (apiErr.body as { message?: string })?.message || 'Invalid credentials'
-      setServerError(msg)
+      const body = apiErr.body as { message?: string; detail?: string } | null
+      if (apiErr.status === 403) {
+        setServerError('Your email is not verified. Please check your inbox for the verification link.')
+      } else {
+        setServerError(body?.message ?? body?.detail ?? 'Invalid credentials')
+      }
     }
   }
 
