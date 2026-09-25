@@ -10,6 +10,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
+interface FieldValue {
+  field_id: string
+  label: string
+  field_type: string
+  value: string
+}
+
 interface Request {
   id: string
   title: string
@@ -17,6 +24,7 @@ interface Request {
   request_type_name: string
   citizen_email: string
   created_at: string
+  field_values: FieldValue[]
 }
 
 const STATUSES = ['pending', 'in_progress', 'resolved', 'rejected']
@@ -32,6 +40,7 @@ export default function RequestsPage() {
   const { portal, isLoading: portalLoading } = usePortalAdmin()
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
 
   const { data: requests, isLoading, error: requestsError, mutate } = useSWR<Request[]>(
     portal ? `/org/portals/${portal.id}/requests` : null,
@@ -67,7 +76,6 @@ export default function RequestsPage() {
     <div className="max-w-4xl space-y-6">
       <h1 className="text-2xl font-semibold text-gray-900">Requests</h1>
 
-      {/* Status filter */}
       <div className="flex gap-2 flex-wrap">
         {['all', ...STATUSES].map((s) => (
           <button
@@ -97,19 +105,27 @@ export default function RequestsPage() {
             <Card key={req.id}>
               <CardContent className="pt-5">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900">{req.title}</p>
+                  <button
+                    type="button"
+                    className="min-w-0 flex-1 text-left"
+                    onClick={() => setExpandedId(expandedId === req.id ? null : req.id)}
+                  >
+                    <p className="font-medium text-gray-900">
+                      <span className="mr-1 text-gray-400 text-xs">
+                        {expandedId === req.id ? '▾' : '▸'}
+                      </span>
+                      {req.title}
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
                       {req.request_type_name} · {req.citizen_email} ·{' '}
                       {new Date(req.created_at).toLocaleDateString()}
                     </p>
-                  </div>
+                  </button>
                   <Badge className={`shrink-0 text-xs ${statusColors[req.status] ?? 'bg-gray-100 text-gray-700'}`}>
                     {req.status.replace('_', ' ')}
                   </Badge>
                 </div>
 
-                {/* Status actions */}
                 <div className="flex gap-2 mt-4 flex-wrap">
                   {STATUSES.filter((s) => s !== req.status).map((s) => (
                     <Button
@@ -124,6 +140,19 @@ export default function RequestsPage() {
                     </Button>
                   ))}
                 </div>
+
+                {expandedId === req.id && req.field_values?.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-x-6 gap-y-2">
+                    {req.field_values.map((fv) => (
+                      <div key={fv.field_id}>
+                        <p className="text-xs text-gray-500">{fv.label}</p>
+                        <p className="text-sm text-gray-900">
+                          {fv.field_type === 'date' ? new Date(fv.value).toLocaleDateString() : fv.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
