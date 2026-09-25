@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { citizenFetch, citizenErrorMessage } from '@/lib/citizenApi'
@@ -15,12 +15,31 @@ function VerifyEmailContent() {
   const portalSlug = decodeURIComponent(portal_slug ?? '')
   const base = `/${orgSlug}/${portalSlug}`
   const searchParams = useSearchParams()
+  const tokenFromUrl = searchParams.get('token') ?? ''
   const email = searchParams.get('email') ?? ''
   const router = useRouter()
 
   const [token, setToken] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [autoVerifying, setAutoVerifying] = useState(!!tokenFromUrl)
+
+  useEffect(() => {
+    if (!tokenFromUrl) return
+    async function autoVerify() {
+      try {
+        await citizenFetch(orgSlug, portalSlug, '/auth/verify-email', {
+          method: 'POST',
+          body: JSON.stringify({ token: tokenFromUrl }),
+        })
+        router.push(`${base}/sign-in`)
+      } catch (err) {
+        setError(citizenErrorMessage(err, 'Verification failed. The link may have expired.'))
+        setAutoVerifying(false)
+      }
+    }
+    autoVerify()
+  }, [tokenFromUrl, orgSlug, portalSlug, base, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -33,19 +52,23 @@ function VerifyEmailContent() {
       })
       router.push(`${base}/sign-in`)
     } catch (err) {
-      setError(citizenErrorMessage(err, 'Verification failed. Please check the code and try again.'))
+      setError(citizenErrorMessage(err, 'Verification failed. Please check the token and try again.'))
     } finally {
       setLoading(false)
     }
   }
 
+  if (autoVerifying) return <LoadingSpinner />
+
   return (
     <div className="max-w-sm mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Check your email</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Verify your email</h1>
         <p className="text-sm text-gray-500 mt-1">
-          We sent a verification link to{email ? ` ${email}` : ' your email'}.
-          Enter the token below to verify your account.
+          {email
+            ? `We sent a verification link to ${email}.`
+            : 'We sent a verification link to your email.'}
+          {' '}Click the link in your email, or paste the token below.
         </p>
       </div>
 
