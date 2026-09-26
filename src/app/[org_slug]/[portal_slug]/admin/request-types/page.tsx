@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import useSWR from 'swr'
 import { toast } from 'sonner'
 import { usePortalAdmin } from '@/hooks/usePortalAdmin'
@@ -278,6 +280,7 @@ function FieldForm({
 }
 
 export default function RequestTypesPage() {
+  const { org_slug, portal_slug } = useParams<{ org_slug: string; portal_slug: string }>()
   const { portal, isLoading: portalLoading } = usePortalAdmin()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -413,6 +416,9 @@ export default function RequestTypesPage() {
                       {rt.description && <p className="text-sm text-gray-500 mt-0.5">{rt.description}</p>}
                     </div>
                     <div className="flex gap-2 ml-4 shrink-0">
+                      <Link href={`/${org_slug}/${portal_slug}/admin/request-types/${rt.id}/workflow`}>
+                        <Button variant="outline" size="sm">Workflow</Button>
+                      </Link>
                       <Button variant="outline" size="sm" onClick={() => openEdit(rt)}>Edit</Button>
                       <Button
                         variant="outline"

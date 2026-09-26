@@ -5,6 +5,9 @@ export type Permission =
   | 'requests:delete'
   | 'org.users.manage'
   | 'org.portals.manage'
+  | 'portal.workflows:view'
+  | 'portal.workflows:manage'
+  | 'portal.requests:update'
 
 export interface OrgRole {
   id: string
