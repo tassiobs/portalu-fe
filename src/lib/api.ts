@@ -1,4 +1,4 @@
-import { getAccessToken, setAccessToken, getRefreshToken, clearTokens } from './tokens'
+import { getAccessToken, setAccessToken, setRefreshToken, getRefreshToken, clearTokens } from './tokens'
 
 const BASE = process.env.NEXT_PUBLIC_API_URL!
 
@@ -17,6 +17,7 @@ async function tryRefresh(): Promise<boolean> {
     }
     const data = await res.json()
     setAccessToken(data.access_token)
+    if (data.refresh_token) setRefreshToken(data.refresh_token)
     return true
   } catch {
     // Network error — don't clear tokens, backend may be temporarily unreachable

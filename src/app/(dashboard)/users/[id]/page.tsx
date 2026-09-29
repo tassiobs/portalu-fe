@@ -29,7 +29,8 @@ interface Role {
 interface Portal { id: string; name: string }
 
 interface AssignedRole {
-  id: string
+  id: string          // assignment record ID — used for DELETE
+  role_id: string     // role definition ID — used to filter available roles
   name: string
   level: 'org' | 'portal'
   portal_id: string | null
@@ -61,7 +62,7 @@ export default function UserDetailPage({ params }: { params: { id: string } }) {
 
   const { data: portals } = useSWR<Portal[]>('/org/portals', () => apiFetch<Portal[]>('/org/portals'))
 
-  const assignedIds = new Set((assignedRoles ?? []).map((r) => r.id))
+  const assignedIds = new Set((assignedRoles ?? []).map((r) => r.role_id ?? r.id))
   const availableRoles = allRoles.filter((r) => !assignedIds.has(r.id))
   const orgRoles = availableRoles.filter((r) => r.level === 'org')
   const portalRoles = availableRoles.filter((r) => r.level === 'portal')

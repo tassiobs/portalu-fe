@@ -21,12 +21,13 @@ export async function rehydrate(): Promise<boolean> {
   const refresh = getRefreshToken()
   if (!refresh) return false
   try {
-    const data = await apiFetch<{ access_token: string }>(
+    const data = await apiFetch<{ access_token: string; refresh_token?: string }>(
       '/auth/refresh',
       { method: 'POST', body: JSON.stringify({ refresh_token: refresh }) },
       false,
     )
     setAccessToken(data.access_token)
+    if (data.refresh_token) setRefreshToken(data.refresh_token)
     return true
   } catch (err) {
     // Only invalidate stored tokens on explicit auth rejection, not server errors
