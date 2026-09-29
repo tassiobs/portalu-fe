@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import useSWR from 'swr'
 import { toast } from 'sonner'
@@ -64,7 +64,6 @@ export default function WorkflowBuilderPage() {
     portal_slug: string
     id: string
   }>()
-  const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { portal, isLoading: portalLoading } = usePortalAdmin()
 
