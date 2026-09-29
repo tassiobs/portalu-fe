@@ -6,6 +6,8 @@ import { useParams } from 'next/navigation'
 import useSWR from 'swr'
 import { toast } from 'sonner'
 import { usePortalAdmin } from '@/hooks/usePortalAdmin'
+import { useAuth } from '@/context/AuthContext'
+import { canPortal } from '@/lib/permissions'
 import { apiFetch, ApiError, apiErrorMessage } from '@/lib/api'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Badge } from '@/components/ui/badge'
@@ -32,7 +34,9 @@ const statusColors: Record<string, string> = {
 
 export default function RequestsPage() {
   const { org_slug, portal_slug } = useParams<{ org_slug: string; portal_slug: string }>()
+  const { user } = useAuth()
   const { portal, isLoading: portalLoading } = usePortalAdmin()
+  const canReadAll = !!user && !!portal && canPortal(user, portal.id, 'portal.requests:read_all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
@@ -68,28 +72,35 @@ export default function RequestsPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Requests</h1>
-
-      <div className="flex gap-2 flex-wrap">
-        {['all', ...STATUSES].map((s) => (
-          <button
-            key={s}
-            onClick={() => setFilterStatus(s)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filterStatus === s
-                ? 'bg-gray-900 text-white'
-                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            {s === 'all' ? 'All' : s.replace('_', ' ')}
-            {s !== 'all' && (
-              <span className="ml-1.5 text-xs opacity-70">
-                {(requests ?? []).filter((r) => r.status === s).length}
-              </span>
-            )}
-          </button>
-        ))}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-gray-900">Requests</h1>
+        {!canReadAll && (
+          <span className="text-xs text-gray-400">Showing requests assigned to you</span>
+        )}
       </div>
+
+      {canReadAll && (
+        <div className="flex gap-2 flex-wrap">
+          {['all', ...STATUSES].map((s) => (
+            <button
+              key={s}
+              onClick={() => setFilterStatus(s)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                filterStatus === s
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {s === 'all' ? 'All' : s.replace('_', ' ')}
+              {s !== 'all' && (
+                <span className="ml-1.5 text-xs opacity-70">
+                  {(requests ?? []).filter((r) => r.status === s).length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       {filtered.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-12">No requests found.</p>

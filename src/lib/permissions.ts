@@ -8,6 +8,7 @@ export type Permission =
   | 'portal.workflows:view'
   | 'portal.workflows:manage'
   | 'portal.requests:update'
+  | 'portal.requests:read_all'
 
 export interface OrgRole {
   id: string
