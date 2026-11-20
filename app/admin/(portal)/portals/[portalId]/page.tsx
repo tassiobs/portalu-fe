@@ -1,5 +1,4 @@
 "use client";
-import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { listPortalRequests } from "@/lib/api/admin";
@@ -14,8 +13,8 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
   rejected: "Rejected",
 };
 
-export default function PortalDashboardPage({ params }: { params: Promise<{ portalId: string }> }) {
-  const { portalId } = use(params);
+export default function PortalDashboardPage({ params }: { params: { portalId: string } }) {
+  const { portalId } = params;
   const router = useRouter();
 
   const { data: requests = [], isLoading } = useQuery({
