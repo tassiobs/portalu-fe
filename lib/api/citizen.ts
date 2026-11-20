@@ -3,7 +3,7 @@ import { getCitizenToken } from "./citizen-token";
 import type { CitizenAuthResponse, CitizenOut, CitizenRequestOut, RequestTypeOut } from "./types";
 
 function portalBase(org: string, portal: string) {
-  return `/api/v1/citizen/${org}/${portal}`;
+  return `/api/v1/customer/${org}/${portal}`;
 }
 
 function authedConfig(org: string, portal: string) {

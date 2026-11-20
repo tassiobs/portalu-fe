@@ -99,7 +99,7 @@ citizenApi.interceptors.response.use(
       try {
         const { refresh } = getCitizenTokens(orgSlug, portalSlug);
         const { data } = await axios.post(
-          `${API_BASE}/api/v1/citizen/${orgSlug}/${portalSlug}/auth/refresh`,
+          `${API_BASE}/api/v1/customer/${orgSlug}/${portalSlug}/auth/refresh`,
           { refresh_token: refresh }
         );
         setCitizenTokens(orgSlug, portalSlug, data.access_token, data.refresh_token);
