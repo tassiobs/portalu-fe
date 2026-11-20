@@ -45,7 +45,7 @@ export default function PortalsPage() {
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Portals</h1>
         <Button onClick={() => setOpen(true)}>
@@ -60,7 +60,7 @@ export default function PortalsPage() {
           <Card
             key={p.id}
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => router.push(`/admin/portals/${p.id}/request-types`)}
+            onClick={() => router.push(`/admin/portals/${p.id}`)}
           >
             <CardHeader>
               <CardTitle className="text-base">{p.name}</CardTitle>

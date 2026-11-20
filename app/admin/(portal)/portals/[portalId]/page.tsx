@@ -1,6 +1,8 @@
 "use client";
+import { use } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { listPortals, listPortalRequests } from "@/lib/api/admin";
+import { useRouter } from "next/navigation";
+import { listPortalRequests } from "@/lib/api/admin";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { RequestStatus } from "@/lib/api/types";
@@ -12,14 +14,13 @@ const STATUS_LABELS: Record<RequestStatus, string> = {
   rejected: "Rejected",
 };
 
-export default function DashboardPage() {
-  const { data: portals = [] } = useQuery({ queryKey: ["portals"], queryFn: listPortals });
+export default function PortalDashboardPage({ params }: { params: Promise<{ portalId: string }> }) {
+  const { portalId } = use(params);
+  const router = useRouter();
 
-  const firstPortal = portals[0];
-  const { data: requests = [] } = useQuery({
-    queryKey: ["requests", firstPortal?.id],
-    queryFn: () => listPortalRequests(firstPortal!.id),
-    enabled: !!firstPortal?.id,
+  const { data: requests = [], isLoading } = useQuery({
+    queryKey: ["requests", portalId],
+    queryFn: () => listPortalRequests(portalId),
   });
 
   const counts = requests.reduce<Record<string, number>>(
@@ -46,9 +47,11 @@ export default function DashboardPage() {
 
       <div>
         <h2 className="text-lg font-semibold mb-3">Recent Requests</h2>
-        {requests.length === 0 ? (
+        {isLoading && <p className="text-muted-foreground text-sm">Loading…</p>}
+        {!isLoading && requests.length === 0 && (
           <p className="text-muted-foreground text-sm">No requests yet.</p>
-        ) : (
+        )}
+        {requests.length > 0 && (
           <div className="rounded-md border">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/50">
@@ -60,7 +63,11 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {requests.slice(0, 10).map((r) => (
-                  <tr key={r.id} className="border-b last:border-0">
+                  <tr
+                    key={r.id}
+                    className="border-b last:border-0 cursor-pointer hover:bg-muted/50"
+                    onClick={() => router.push(`/admin/portals/${portalId}/requests/${r.id}`)}
+                  >
                     <td className="px-4 py-2">{r.title}</td>
                     <td className="px-4 py-2">
                       <Badge variant={r.status as RequestStatus}>{STATUS_LABELS[r.status]}</Badge>
