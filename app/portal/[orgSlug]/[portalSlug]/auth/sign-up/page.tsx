@@ -29,9 +29,9 @@ export default function CitizenSignUpPage() {
 
   async function onSubmit(data: FormData) {
     try {
-      await citizenSignUp(orgSlug, portalSlug, data);
-      toast.success("Account created! Please sign in.");
-      router.push(`${base}/auth/sign-in`);
+      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/portal/${orgSlug}/${portalSlug}/auth/verify-email`;
+      await citizenSignUp(orgSlug, portalSlug, { ...data, redirect_url: redirectUrl });
+      router.push(`${base}/auth/check-email?email=${encodeURIComponent(data.email)}`);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Sign up failed";
       toast.error(msg);

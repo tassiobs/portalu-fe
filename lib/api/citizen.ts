@@ -23,8 +23,11 @@ export const listPublicRequestTypes = (org: string, portal: string) =>
   citizenApi.get<RequestTypeOut[]>(`${portalBase(org, portal)}/request-types`).then((r) => r.data);
 
 // Auth
-export const citizenSignUp = (org: string, portal: string, data: { email: string; password: string; name?: string }) =>
+export const citizenSignUp = (org: string, portal: string, data: { email: string; password: string; name?: string; redirect_url: string }) =>
   citizenApi.post(`${portalBase(org, portal)}/auth/sign-up`, data).then((r) => r.data);
+
+export const citizenVerifyEmail = (org: string, portal: string, token: string) =>
+  citizenApi.post(`${portalBase(org, portal)}/auth/verify-email`, { token }).then((r) => r.data);
 
 export const citizenSignIn = (org: string, portal: string, data: { email: string; password: string }) =>
   citizenApi.post<CitizenAuthResponse>(`${portalBase(org, portal)}/auth/sign-in`, data).then((r) => r.data);
