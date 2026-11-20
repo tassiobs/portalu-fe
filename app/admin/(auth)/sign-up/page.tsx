@@ -27,7 +27,7 @@ export default function AdminSignUpPage() {
 
   async function onSubmit(data: FormData) {
     try {
-      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email`;
+      const redirectUrl = `${window.location.origin}/verify-email`;
       const res = await signUp({ ...data, redirect_url: redirectUrl });
       const params = new URLSearchParams({ email: data.email });
       if (res.verification_token) params.set("token", res.verification_token);

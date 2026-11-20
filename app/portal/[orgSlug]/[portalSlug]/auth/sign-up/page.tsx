@@ -29,7 +29,7 @@ export default function CitizenSignUpPage() {
 
   async function onSubmit(data: FormData) {
     try {
-      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/portal/${orgSlug}/${portalSlug}/auth/verify-email`;
+      const redirectUrl = `${window.location.origin}/portal/${orgSlug}/${portalSlug}/auth/verify-email`;
       await citizenSignUp(orgSlug, portalSlug, { ...data, redirect_url: redirectUrl });
       router.push(`${base}/auth/check-email?email=${encodeURIComponent(data.email)}`);
     } catch (err: unknown) {

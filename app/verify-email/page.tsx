@@ -44,7 +44,7 @@ function VerifyEmailContent() {
 
   async function onResend(data: ResendForm) {
     try {
-      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email`;
+      const redirectUrl = `${window.location.origin}/verify-email`;
       await resendVerification(data.email, redirectUrl);
       toast.success("Verification email sent — check your inbox.");
     } catch (err: unknown) {

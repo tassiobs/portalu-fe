@@ -17,7 +17,7 @@ function CheckEmailContent() {
     if (!email) return;
     setResending(true);
     try {
-      const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email`;
+      const redirectUrl = `${window.location.origin}/verify-email`;
       await resendVerification(email, redirectUrl);
       toast.success("Verification email sent — check your inbox.");
     } catch (err: unknown) {
