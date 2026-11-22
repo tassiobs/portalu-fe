@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
       setAdminTokens(res.access_token, res.refresh_token);
       const org = await getOrg();
       setAdminOrgSlug(org.slug);
-      router.push("/admin/dashboard");
+      router.push("/admin/portals");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Invalid credentials";
       toast.error(msg);
