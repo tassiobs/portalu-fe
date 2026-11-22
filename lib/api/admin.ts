@@ -2,7 +2,7 @@ import { adminApi } from "./client";
 import type {
   AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, RoleOut,
   PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut,
-  TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut,
+  TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut, PermissionOut,
 } from "./types";
 
 // Auth
@@ -61,11 +61,17 @@ export const listInvitations = () =>
 export const listRoles = () =>
   adminApi.get<RoleOut[]>("/api/v1/org/roles").then((r) => r.data);
 
-export const createRole = (data: { name: string; description?: string }) =>
+export const createRole = (data: { name: string; description?: string; level?: string; permissions?: string[] }) =>
   adminApi.post<RoleOut>("/api/v1/org/roles", data).then((r) => r.data);
+
+export const updateRole = (roleId: string, data: { name?: string; description?: string; permissions?: string[] }) =>
+  adminApi.patch<RoleOut>(`/api/v1/org/roles/${roleId}`, data).then((r) => r.data);
 
 export const deleteRole = (roleId: string) =>
   adminApi.delete(`/api/v1/org/roles/${roleId}`);
+
+export const listPermissions = () =>
+  adminApi.get<PermissionOut[]>("/api/v1/org/permissions").then((r) => r.data);
 
 // Portals
 export const listPortals = () =>

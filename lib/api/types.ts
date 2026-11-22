@@ -107,6 +107,13 @@ export interface CitizenRequestOut {
   created_at: string;
 }
 
+export interface PermissionOut {
+  key: string;
+  label: string;
+  description?: string;
+  level: "org" | "portal";
+}
+
 export interface InvitationOut {
   id: string;
   email: string;
