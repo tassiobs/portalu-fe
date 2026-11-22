@@ -120,8 +120,52 @@ export default function RolesPage() {
     },
   });
 
+  function RoleCard({ role }: { role: RoleOut }) {
+    return (
+      <div className="rounded-lg border bg-card px-4 py-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 space-y-1.5">
+            <p className="text-sm font-semibold">{role.name}</p>
+            {role.description && (
+              <p className="text-xs text-muted-foreground">{role.description}</p>
+            )}
+            {role.permissions && role.permissions.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-0.5">
+                {role.permissions.map((p) => (
+                  <span
+                    key={p}
+                    className="rounded bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground"
+                  >
+                    {p}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(role)}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => setDeleteTarget(role)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const orgRoles = roles.filter((r) => r.level === "org");
+  const portalRoles = roles.filter((r) => r.level === "portal");
+  const ungrouped = roles.filter((r) => !r.level);
+
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+    <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Roles</h1>
         <Button onClick={openCreate}>
@@ -131,57 +175,25 @@ export default function RolesPage() {
 
       {isLoading && <p className="text-muted-foreground text-sm">Loading…</p>}
 
-      <div className="space-y-3">
-        {roles.map((role) => (
-          <div key={role.id} className="rounded-lg border bg-card px-4 py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-semibold">{role.name}</p>
-                  {role.level && (
-                    <Badge variant="secondary" className="capitalize text-xs">
-                      {role.level}
-                    </Badge>
-                  )}
-                </div>
-                {role.description && (
-                  <p className="text-xs text-muted-foreground">{role.description}</p>
-                )}
-                {role.permissions && role.permissions.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pt-0.5">
-                    {role.permissions.map((p) => (
-                      <span
-                        key={p}
-                        className="rounded bg-muted px-2 py-0.5 text-xs font-mono text-muted-foreground"
-                      >
-                        {p}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => openEdit(role)}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive"
-                  onClick={() => setDeleteTarget(role)}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      {orgRoles.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Org
+          </h2>
+          {orgRoles.map((role) => <RoleCard key={role.id} role={role} />)}
+        </div>
+      )}
+
+      {portalRoles.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Portal
+          </h2>
+          {portalRoles.map((role) => <RoleCard key={role.id} role={role} />)}
+        </div>
+      )}
+
+      {ungrouped.map((role) => <RoleCard key={role.id} role={role} />)}
 
       {/* Create / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
