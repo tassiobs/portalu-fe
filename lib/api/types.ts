@@ -107,6 +107,13 @@ export interface CitizenRequestOut {
   created_at: string;
 }
 
+export interface PortalUserOut {
+  user_id: string;
+  user: UserOut;
+  role_id: string;
+  role: RoleOut;
+}
+
 export interface PermissionOut {
   key: string;
   label: string;

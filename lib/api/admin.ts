@@ -3,6 +3,7 @@ import type {
   AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, RoleOut,
   PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut,
   TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut, PermissionOut,
+  PortalUserOut,
 } from "./types";
 
 // Auth
@@ -73,7 +74,16 @@ export const deleteRole = (roleId: string) =>
 export const listPermissions = () =>
   adminApi.get("/api/v1/org/permissions").then((r) => {
     const d = r.data;
-    return (Array.isArray(d) ? d : (d.data ?? [])) as PermissionOut[];
+    if (Array.isArray(d)) return d as PermissionOut[];
+    // grouped: { org: [...], portal: [...] }
+    if (d.org || d.portal) {
+      return [
+        ...(d.org ?? []).map((p: PermissionOut) => ({ ...p, level: "org" as const })),
+        ...(d.portal ?? []).map((p: PermissionOut) => ({ ...p, level: "portal" as const })),
+      ];
+    }
+    // paginated: { data: [...] }
+    return (d.data ?? []) as PermissionOut[];
   });
 
 // Portals
@@ -88,6 +98,16 @@ export const updatePortal = (portalId: string, data: { name?: string; descriptio
 
 export const deletePortal = (portalId: string) =>
   adminApi.delete(`/api/v1/org/portals/${portalId}`);
+
+// Portal Users
+export const listPortalUsers = (portalId: string) =>
+  adminApi.get<PortalUserOut[]>(`/api/v1/org/portals/${portalId}/users`).then((r) => r.data);
+
+export const assignPortalUser = (portalId: string, data: { user_id: string; role_id: string }) =>
+  adminApi.post<PortalUserOut>(`/api/v1/org/portals/${portalId}/users`, data).then((r) => r.data);
+
+export const removePortalUser = (portalId: string, userId: string) =>
+  adminApi.delete(`/api/v1/org/portals/${portalId}/users/${userId}`);
 
 // Request Types
 export const listRequestTypes = (portalId: string) =>

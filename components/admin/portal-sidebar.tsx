@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Inbox, FileText, ArrowLeft, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Inbox, FileText, Users, ArrowLeft, ExternalLink } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { clearAdminTokens, getAdminOrgSlug } from "@/lib/api/client";
@@ -21,6 +21,7 @@ export function PortalSidebar() {
     { href: `/admin/portals/${portalId}`, icon: LayoutDashboard, label: "Dashboard", exact: true },
     { href: `/admin/portals/${portalId}/requests`, icon: Inbox, label: "Requests" },
     { href: `/admin/portals/${portalId}/request-types`, icon: FileText, label: "Request Types" },
+    { href: `/admin/portals/${portalId}/users`, icon: Users, label: "Users & Roles" },
   ];
 
   function handleSignOut() {
