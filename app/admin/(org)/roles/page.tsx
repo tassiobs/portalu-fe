@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -164,6 +164,30 @@ export default function RolesPage() {
   const portalRoles = roles.filter((r) => r.level === "portal");
   const ungrouped = roles.filter((r) => !r.level);
 
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  function toggle(key: string) {
+    setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  function RoleGroup({ id, label, group }: { id: string; label: string; group: RoleOut[] }) {
+    if (group.length === 0) return null;
+    const open = !!expanded[id];
+    return (
+      <div className="space-y-3">
+        <button
+          type="button"
+          onClick={() => toggle(id)}
+          className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-90")} />
+          {label}
+          <span className="font-normal normal-case tracking-normal">({group.length})</span>
+        </button>
+        {open && group.map((role) => <RoleCard key={role.id} role={role} />)}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-10 space-y-8">
       <div className="flex items-center justify-between">
@@ -175,24 +199,8 @@ export default function RolesPage() {
 
       {isLoading && <p className="text-muted-foreground text-sm">Loading…</p>}
 
-      {orgRoles.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Org
-          </h2>
-          {orgRoles.map((role) => <RoleCard key={role.id} role={role} />)}
-        </div>
-      )}
-
-      {portalRoles.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Portal
-          </h2>
-          {portalRoles.map((role) => <RoleCard key={role.id} role={role} />)}
-        </div>
-      )}
-
+      <RoleGroup id="org" label="Org" group={orgRoles} />
+      <RoleGroup id="portal" label="Portal" group={portalRoles} />
       {ungrouped.map((role) => <RoleCard key={role.id} role={role} />)}
 
       {/* Create / Edit dialog */}
