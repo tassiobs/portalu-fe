@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { clearCitizenTokens } from "@/lib/api/client";
+import { clearCitizenTokens, clearOrgRefreshToken } from "@/lib/api/client";
 import { getCitizenToken } from "@/lib/api/citizen-token";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +15,7 @@ export function CitizenNav() {
 
   function handleSignOut() {
     clearCitizenTokens(orgSlug, portalSlug);
+    clearOrgRefreshToken(orgSlug);
     router.push(base);
   }
 

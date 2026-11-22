@@ -54,6 +54,19 @@ export function clearCitizenTokens(orgSlug: string, portalSlug: string) {
   localStorage.removeItem(`${key}_refresh_token`);
 }
 
+export function setOrgRefreshToken(orgSlug: string, token: string) {
+  localStorage.setItem(`rt:${orgSlug}`, token);
+}
+
+export function getOrgRefreshToken(orgSlug: string): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(`rt:${orgSlug}`);
+}
+
+export function clearOrgRefreshToken(orgSlug: string) {
+  localStorage.removeItem(`rt:${orgSlug}`);
+}
+
 // Admin request interceptor
 adminApi.interceptors.request.use((config) => {
   const { access } = getAdminTokens();

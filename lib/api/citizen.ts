@@ -32,6 +32,9 @@ export const citizenVerifyEmail = (org: string, portal: string, token: string) =
 export const citizenSignIn = (org: string, portal: string, data: { email: string; password: string }) =>
   citizenApi.post<CitizenAuthResponse>(`${portalBase(org, portal)}/auth/sign-in`, data).then((r) => r.data);
 
+export const citizenExchange = (org: string, portal: string, refreshToken: string) =>
+  citizenApi.post<CitizenAuthResponse>(`${portalBase(org, portal)}/auth/exchange`, { refresh_token: refreshToken }).then((r) => r.data);
+
 export const citizenSignOut = (org: string, portal: string, refreshToken: string) =>
   citizenApi.post(`${portalBase(org, portal)}/auth/sign-out`, { refresh_token: refreshToken }, authedConfig(org, portal));
 

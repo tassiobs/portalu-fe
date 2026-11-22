@@ -1,11 +1,12 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { citizenSignIn } from "@/lib/api/citizen";
-import { setCitizenTokens } from "@/lib/api/client";
+import { citizenSignIn, citizenExchange } from "@/lib/api/citizen";
+import { setCitizenTokens, setOrgRefreshToken, getOrgRefreshToken } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,22 @@ export default function CitizenSignInPage() {
   const { orgSlug, portalSlug } = useParams<{ orgSlug: string; portalSlug: string }>();
   const router = useRouter();
   const base = `/portal/${orgSlug}/${portalSlug}`;
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const orgToken = getOrgRefreshToken(orgSlug);
+    if (!orgToken) {
+      setChecking(false);
+      return;
+    }
+    citizenExchange(orgSlug, portalSlug, orgToken)
+      .then((res) => {
+        setCitizenTokens(orgSlug, portalSlug, res.access_token, res.refresh_token);
+        setOrgRefreshToken(orgSlug, res.refresh_token);
+        router.replace(base);
+      })
+      .catch(() => setChecking(false));
+  }, [orgSlug, portalSlug, base, router]);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -31,12 +48,15 @@ export default function CitizenSignInPage() {
     try {
       const res = await citizenSignIn(orgSlug, portalSlug, data);
       setCitizenTokens(orgSlug, portalSlug, res.access_token, res.refresh_token);
+      setOrgRefreshToken(orgSlug, res.refresh_token);
       router.push(base);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Invalid credentials";
       toast.error(msg);
     }
   }
+
+  if (checking) return null;
 
   return (
     <div className="max-w-sm mx-auto">
