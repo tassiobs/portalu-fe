@@ -56,7 +56,10 @@ export const removeRole = (userId: string, roleId: string) =>
 
 // Invitations
 export const listInvitations = () =>
-  adminApi.get<InvitationOut[]>("/api/v1/org/invitations").then((r) => r.data);
+  adminApi.get("/api/v1/org/invitations").then((r) => {
+    const d = r.data;
+    return (Array.isArray(d) ? d : (d.data ?? [])) as InvitationOut[];
+  });
 
 // Roles
 export const listRoles = () =>
