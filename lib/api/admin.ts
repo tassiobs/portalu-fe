@@ -2,7 +2,7 @@ import { adminApi } from "./client";
 import type {
   AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, RoleOut,
   PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut,
-  TaskInstanceOut, TaskCommentOut, Pagination, FieldType,
+  TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut,
 } from "./types";
 
 // Auth
@@ -52,6 +52,10 @@ export const assignRole = (userId: string, roleId: string) =>
 
 export const removeRole = (userId: string, roleId: string) =>
   adminApi.delete(`/api/v1/org/users/${userId}/roles/${roleId}`);
+
+// Invitations
+export const listInvitations = () =>
+  adminApi.get<InvitationOut[]>("/api/v1/org/invitations").then((r) => r.data);
 
 // Roles
 export const listRoles = () =>

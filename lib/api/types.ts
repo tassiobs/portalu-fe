@@ -107,6 +107,14 @@ export interface CitizenRequestOut {
   created_at: string;
 }
 
+export interface InvitationOut {
+  id: string;
+  email: string;
+  name?: string;
+  status: string;
+  created_at: string;
+}
+
 export interface AuthResponse {
   access_token: string;
   refresh_token: string;
