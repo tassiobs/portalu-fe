@@ -71,7 +71,10 @@ export const deleteRole = (roleId: string) =>
   adminApi.delete(`/api/v1/org/roles/${roleId}`);
 
 export const listPermissions = () =>
-  adminApi.get<PermissionOut[]>("/api/v1/org/permissions").then((r) => r.data);
+  adminApi.get("/api/v1/org/permissions").then((r) => {
+    const d = r.data;
+    return (Array.isArray(d) ? d : (d.data ?? [])) as PermissionOut[];
+  });
 
 // Portals
 export const listPortals = () =>
