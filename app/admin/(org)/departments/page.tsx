@@ -168,7 +168,7 @@ export default function DepartmentsPage() {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete "{deleteTarget?.name}"?</DialogTitle>
+            <DialogTitle>Delete &ldquo;{deleteTarget?.name}&rdquo;?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             This will permanently delete the department and remove all its members. This cannot be undone.
