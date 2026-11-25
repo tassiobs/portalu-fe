@@ -157,9 +157,50 @@ export interface CitizenAuthResponse {
   citizen: CitizenOut;
 }
 
-export interface Pagination<T> {
-  data: T[];
-  total: number;
+export interface PaginationMeta {
   page: number;
   per_page: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface Pagination<T> {
+  data: T[];
+  pagination: PaginationMeta;
+}
+
+export interface OrgRoleRef {
+  id: string;
+  name: string;
+  level: string;
+  permissions: string[];
+}
+
+export interface PortalRoleRef {
+  id: string;
+  name: string;
+  level: string;
+  portal_name: string;
+}
+
+export interface UserDetailOut {
+  id: string;
+  name?: string;
+  email: string;
+  email_verified: boolean;
+  status: string;
+  org_roles: OrgRoleRef[];
+  portal_roles: PortalRoleRef[];
+  created_at: string;
+}
+
+export interface InvitationDetailOut {
+  id: string;
+  email: string;
+  name?: string;
+  status: string;
+  invited_by: { id: string; name?: string; email: string };
+  created_at: string;
+  expires_at: string;
+  accepted_at: string | null;
 }

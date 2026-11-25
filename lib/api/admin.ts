@@ -1,9 +1,9 @@
 import { adminApi } from "./client";
 import type {
-  AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, RoleOut,
+  AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, UserDetailOut, RoleOut,
   PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut,
-  TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut, PermissionOut,
-  PortalUserOut, SignedUrlOut,
+  TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut, InvitationDetailOut,
+  PermissionOut, PortalUserOut, SignedUrlOut,
 } from "./types";
 
 // Auth
@@ -42,8 +42,17 @@ export const updateOrgSettings = (data: { citizen_identity_scope?: string }) =>
 export const listUsers = (page = 1, perPage = 20) =>
   adminApi.get<Pagination<UserOut>>("/api/v1/org/users", { params: { page, per_page: perPage } }).then((r) => r.data);
 
+export const getUser = (userId: string) =>
+  adminApi.get<UserDetailOut>(`/api/v1/org/users/${userId}`).then((r) => r.data);
+
 export const inviteUser = (email: string, name?: string) =>
   adminApi.post("/api/v1/org/users", { email, name }).then((r) => r.data);
+
+export const deactivateUser = (userId: string) =>
+  adminApi.post(`/api/v1/org/users/${userId}/deactivate`);
+
+export const reactivateUser = (userId: string) =>
+  adminApi.patch(`/api/v1/org/users/${userId}`, { status: "active" });
 
 export const getUserRoles = (userId: string) =>
   adminApi.get<RoleOut[]>(`/api/v1/org/users/${userId}/roles`).then((r) => r.data);
@@ -55,11 +64,14 @@ export const removeRole = (userId: string, roleId: string) =>
   adminApi.delete(`/api/v1/org/users/${userId}/roles/${roleId}`);
 
 // Invitations
-export const listInvitations = () =>
-  adminApi.get("/api/v1/org/invitations").then((r) => {
-    const d = r.data;
-    return (Array.isArray(d) ? d : (d.data ?? [])) as InvitationOut[];
-  });
+export const listInvitations = (page = 1, perPage = 20) =>
+  adminApi.get<Pagination<InvitationDetailOut>>("/api/v1/org/invitations", { params: { page, per_page: perPage } }).then((r) => r.data);
+
+export const resendInvitation = (invitationId: string) =>
+  adminApi.post(`/api/v1/org/invitations/${invitationId}/resend`);
+
+export const cancelInvitation = (invitationId: string) =>
+  adminApi.post(`/api/v1/org/invitations/${invitationId}/cancel`);
 
 // Roles
 export const listRoles = () =>
