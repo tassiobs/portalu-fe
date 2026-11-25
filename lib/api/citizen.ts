@@ -1,6 +1,6 @@
 import { citizenApi } from "./client";
 import { getCitizenToken } from "./citizen-token";
-import type { CitizenAuthResponse, CitizenOut, CitizenRequestOut, RequestTypeOut } from "./types";
+import type { CitizenAuthResponse, CitizenOut, CitizenRequestOut, RequestTypeOut, FileUploadOut, SignedUrlOut } from "./types";
 
 function portalBase(org: string, portal: string) {
   return `/api/v1/customer/${org}/${portal}`;
@@ -37,6 +37,30 @@ export const citizenExchange = (org: string, portal: string, refreshToken: strin
 
 export const citizenSignOut = (org: string, portal: string, refreshToken: string) =>
   citizenApi.post(`${portalBase(org, portal)}/auth/sign-out`, { refresh_token: refreshToken }, authedConfig(org, portal));
+
+export const uploadCitizenFile = (
+  org: string,
+  portal: string,
+  file: File,
+  onProgress?: (pct: number) => void
+) => {
+  const form = new FormData();
+  form.append("file", file);
+  return citizenApi
+    .post<FileUploadOut>(`${portalBase(org, portal)}/uploads`, form, {
+      ...authedConfig(org, portal),
+      onUploadProgress: (e) => onProgress?.(Math.round((e.loaded * 100) / (e.total ?? e.loaded))),
+    })
+    .then((r) => r.data);
+};
+
+export const getCitizenFileSignedUrl = (org: string, portal: string, requestId: string, fieldId: string) =>
+  citizenApi
+    .get<SignedUrlOut>(
+      `${portalBase(org, portal)}/requests/${requestId}/fields/${fieldId}/signed-url`,
+      authedConfig(org, portal)
+    )
+    .then((r) => r.data);
 
 export const getCitizenMe = (org: string, portal: string) =>
   citizenApi.get<CitizenOut>(`${portalBase(org, portal)}/auth/me`, authedConfig(org, portal)).then((r) => r.data);

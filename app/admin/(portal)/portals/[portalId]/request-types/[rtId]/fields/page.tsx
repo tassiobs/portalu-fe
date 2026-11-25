@@ -15,11 +15,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import type { FieldType } from "@/lib/api/types";
 
-const FIELD_TYPES: FieldType[] = ["text", "textarea", "number", "date", "select"];
+const FIELD_TYPES: { value: FieldType; label: string }[] = [
+  { value: "text", label: "Text" },
+  { value: "textarea", label: "Long text" },
+  { value: "number", label: "Number" },
+  { value: "date", label: "Date" },
+  { value: "select", label: "Select" },
+  { value: "file", label: "File attachment" },
+];
 
 const schema = z.object({
   label: z.string().min(1),
-  field_type: z.enum(["text", "textarea", "number", "date", "select"]),
+  field_type: z.enum(["text", "textarea", "number", "date", "select", "file"]),
   required: z.boolean().default(false),
   order: z.coerce.number().default(0),
   options: z.string().optional(),
@@ -138,7 +145,7 @@ export default function FieldsPage() {
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {FIELD_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                {FIELD_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

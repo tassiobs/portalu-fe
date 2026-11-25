@@ -3,7 +3,7 @@ import type {
   AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, RoleOut,
   PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut,
   TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut, PermissionOut,
-  PortalUserOut,
+  PortalUserOut, SignedUrlOut,
 } from "./types";
 
 // Auth
@@ -146,6 +146,12 @@ export const updateField = (
 
 export const deleteField = (portalId: string, rtId: string, fieldId: string) =>
   adminApi.delete(`/api/v1/org/portals/${portalId}/request-types/${rtId}/fields/${fieldId}`);
+
+// Portal Request Files
+export const getAdminFileSignedUrl = (portalId: string, requestId: string, fieldId: string) =>
+  adminApi
+    .get<SignedUrlOut>(`/api/v1/org/portals/${portalId}/requests/${requestId}/fields/${fieldId}/signed-url`)
+    .then((r) => r.data);
 
 // Portal Requests
 export const listPortalRequests = (portalId: string, params?: { status?: string }) =>

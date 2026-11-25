@@ -35,7 +35,7 @@ export interface PortalOut {
   created_at: string;
 }
 
-export type FieldType = "text" | "textarea" | "number" | "date" | "select";
+export type FieldType = "text" | "textarea" | "number" | "date" | "select" | "file";
 
 export interface RequestTypeFieldOut {
   id: string;
@@ -60,6 +60,17 @@ export interface FieldValueOut {
   field_id: string;
   value: string;
   label?: string;
+  field_type?: string;
+}
+
+export interface FileUploadOut {
+  storage_path: string;
+  file_name: string;
+}
+
+export interface SignedUrlOut {
+  url: string;
+  file_name: string;
 }
 
 export interface RequestOut {

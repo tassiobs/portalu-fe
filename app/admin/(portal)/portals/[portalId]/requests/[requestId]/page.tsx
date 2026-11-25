@@ -3,18 +3,54 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, FileText } from "lucide-react";
 import {
   getPortalRequest, updatePortalRequest,
   listTasks, completeTask,
   listComments, addComment,
+  getAdminFileSignedUrl,
 } from "@/lib/api/admin";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { RequestStatus } from "@/lib/api/types";
+import type { FieldValueOut, RequestStatus } from "@/lib/api/types";
+
+function isFileField(fv: FieldValueOut): boolean {
+  if (fv.field_type === "file") return true;
+  try {
+    const p = JSON.parse(fv.value);
+    return typeof p === "object" && p !== null && "storage_path" in p;
+  } catch {
+    return false;
+  }
+}
+
+function FileViewButton({ portalId, requestId, fieldId, value }: {
+  portalId: string; requestId: string; fieldId: string; value: string;
+}) {
+  const [loading, setLoading] = useState(false);
+  let fileName = "file";
+  try { fileName = JSON.parse(value).file_name ?? "file"; } catch { /* noop */ }
+
+  async function handleClick() {
+    setLoading(true);
+    try {
+      const { url } = await getAdminFileSignedUrl(portalId, requestId, fieldId);
+      window.open(url, "_blank");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Button size="sm" variant="outline" onClick={handleClick} disabled={loading} className="gap-1.5">
+      <FileText className="h-3.5 w-3.5" />
+      {loading ? "…" : fileName}
+    </Button>
+  );
+}
 
 const STATUS_LABELS: Record<RequestStatus, string> = {
   open: "Open", in_progress: "In Progress", closed: "Closed", rejected: "Rejected",
@@ -95,7 +131,18 @@ export default function RequestDetailPage() {
               {request.field_values.map((fv) => (
                 <div key={fv.field_id} className="grid grid-cols-3 gap-2 text-sm">
                   <dt className="font-medium text-muted-foreground">{fv.label ?? fv.field_id}</dt>
-                  <dd className="col-span-2">{fv.value}</dd>
+                  <dd className="col-span-2">
+                    {isFileField(fv) ? (
+                      <FileViewButton
+                        portalId={portalId}
+                        requestId={requestId}
+                        fieldId={fv.field_id}
+                        value={fv.value}
+                      />
+                    ) : (
+                      fv.value
+                    )}
+                  </dd>
                 </div>
               ))}
             </dl>

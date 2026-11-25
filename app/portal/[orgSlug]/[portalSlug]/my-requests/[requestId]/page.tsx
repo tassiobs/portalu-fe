@@ -1,18 +1,57 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { getMyRequest } from "@/lib/api/citizen";
+import { getMyRequest, getCitizenFileSignedUrl } from "@/lib/api/citizen";
 import { getCitizenToken } from "@/lib/api/citizen-token";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft } from "lucide-react";
-import type { RequestStatus } from "@/lib/api/types";
+import { ChevronLeft, Download } from "lucide-react";
+import type { FieldValueOut, RequestStatus } from "@/lib/api/types";
 
 const STATUS_LABELS: Record<RequestStatus, string> = {
   open: "Open", in_progress: "In Progress", closed: "Closed", rejected: "Rejected",
 };
+
+function isFileField(fv: FieldValueOut): boolean {
+  if (fv.field_type === "file") return true;
+  try {
+    const p = JSON.parse(fv.value);
+    return typeof p === "object" && p !== null && "storage_path" in p;
+  } catch {
+    return false;
+  }
+}
+
+function FileDownloadButton({
+  orgSlug, portalSlug, requestId, fieldId, value,
+}: {
+  orgSlug: string; portalSlug: string; requestId: string; fieldId: string; value: string;
+}) {
+  const [loading, setLoading] = useState(false);
+  let fileName = "file";
+  try { fileName = JSON.parse(value).file_name ?? "file"; } catch { /* noop */ }
+
+  async function handleClick() {
+    setLoading(true);
+    try {
+      const { url } = await getCitizenFileSignedUrl(orgSlug, portalSlug, requestId, fieldId);
+      window.open(url, "_blank");
+    } catch {
+      // signed URL fetch failed — silent; user can retry
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Button size="sm" variant="outline" onClick={handleClick} disabled={loading} className="gap-1.5">
+      <Download className="h-3.5 w-3.5" />
+      {loading ? "…" : fileName}
+    </Button>
+  );
+}
 
 export default function CitizenRequestDetailPage() {
   const { orgSlug, portalSlug, requestId } = useParams<{ orgSlug: string; portalSlug: string; requestId: string }>();
@@ -57,7 +96,19 @@ export default function CitizenRequestDetailPage() {
             {request.field_values?.map((fv) => (
               <div key={fv.field_id} className="grid grid-cols-3 gap-2 text-sm">
                 <dt className="font-medium text-muted-foreground">{fv.label ?? fv.field_id}</dt>
-                <dd className="col-span-2">{fv.value}</dd>
+                <dd className="col-span-2">
+                  {isFileField(fv) ? (
+                    <FileDownloadButton
+                      orgSlug={orgSlug}
+                      portalSlug={portalSlug}
+                      requestId={requestId}
+                      fieldId={fv.field_id}
+                      value={fv.value}
+                    />
+                  ) : (
+                    fv.value
+                  )}
+                </dd>
               </div>
             ))}
           </dl>
