@@ -195,6 +195,23 @@ export default function UserDetailPage() {
         </Card>
       )}
 
+      {/* Departments (read-only) */}
+      {user.departments?.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Departments</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {user.departments.map((dept) => (
+              <div key={dept.id} className="text-sm">
+                <p className="font-medium">{dept.name}</p>
+                {dept.description && (
+                  <p className="text-xs text-muted-foreground">{dept.description}</p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Deactivate confirmation */}
       <Dialog open={deactivateOpen} onOpenChange={setDeactivateOpen}>
         <DialogContent>

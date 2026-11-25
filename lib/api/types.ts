@@ -183,6 +183,31 @@ export interface PortalRoleRef {
   portal_name: string;
 }
 
+export interface DepartmentOut {
+  id: string;
+  org_id: string;
+  name: string;
+  description?: string;
+  member_count: number;
+  created_at: string;
+}
+
+export interface DepartmentMemberOut {
+  user: UserOut;
+  created_at: string;
+}
+
+export interface DepartmentDetailOut extends DepartmentOut {
+  members: DepartmentMemberOut[];
+}
+
+export interface UserDepartmentRef {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+}
+
 export interface UserDetailOut {
   id: string;
   name?: string;
@@ -191,6 +216,7 @@ export interface UserDetailOut {
   status: string;
   org_roles: OrgRoleRef[];
   portal_roles: PortalRoleRef[];
+  departments: UserDepartmentRef[];
   created_at: string;
 }
 

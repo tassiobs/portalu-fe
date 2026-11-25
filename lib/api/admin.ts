@@ -3,7 +3,7 @@ import type {
   AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, UserDetailOut, RoleOut,
   PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut,
   TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut, InvitationDetailOut,
-  PermissionOut, PortalUserOut, SignedUrlOut,
+  PermissionOut, PortalUserOut, SignedUrlOut, DepartmentOut, DepartmentDetailOut,
 } from "./types";
 
 // Auth
@@ -62,6 +62,28 @@ export const assignRole = (userId: string, roleId: string) =>
 
 export const removeRole = (userId: string, roleId: string) =>
   adminApi.delete(`/api/v1/org/users/${userId}/roles/${roleId}`);
+
+// Departments
+export const listDepartments = () =>
+  adminApi.get<DepartmentOut[]>("/api/v1/org/departments").then((r) => r.data);
+
+export const getDepartment = (id: string) =>
+  adminApi.get<DepartmentDetailOut>(`/api/v1/org/departments/${id}`).then((r) => r.data);
+
+export const createDepartment = (data: { name: string; description?: string }) =>
+  adminApi.post<DepartmentOut>("/api/v1/org/departments", data).then((r) => r.data);
+
+export const updateDepartment = (id: string, data: { name?: string; description?: string }) =>
+  adminApi.patch<DepartmentOut>(`/api/v1/org/departments/${id}`, data).then((r) => r.data);
+
+export const deleteDepartment = (id: string) =>
+  adminApi.delete(`/api/v1/org/departments/${id}`);
+
+export const addDepartmentMember = (departmentId: string, userId: string) =>
+  adminApi.post(`/api/v1/org/departments/${departmentId}/members`, { user_id: userId });
+
+export const removeDepartmentMember = (departmentId: string, userId: string) =>
+  adminApi.delete(`/api/v1/org/departments/${departmentId}/members/${userId}`);
 
 // Invitations
 export const listInvitations = (page = 1, perPage = 20) =>

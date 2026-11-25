@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Globe, Users, Shield, Mail, Settings, LogOut } from "lucide-react";
+import { Globe, Users, Shield, Mail, Settings, LogOut, Building2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { clearAdminTokens } from "@/lib/api/client";
@@ -9,11 +9,12 @@ import { getMe, getUserRoles, signOut } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
 
 const NAV_ITEMS = [
-  { href: "/admin/portals", icon: Globe, label: "Portals", gated: false },
-  { href: "/admin/team", icon: Users, label: "Team", gated: true },
-  { href: "/admin/roles", icon: Shield, label: "Roles", gated: true },
-  { href: "/admin/invitations", icon: Mail, label: "Invitations", gated: true },
-  { href: "/admin/settings", icon: Settings, label: "Settings", gated: false },
+  { href: "/admin/portals", icon: Globe, label: "Portals", permission: null },
+  { href: "/admin/team", icon: Users, label: "Team", permission: "org.users.manage" },
+  { href: "/admin/roles", icon: Shield, label: "Roles", permission: "org.users.manage" },
+  { href: "/admin/departments", icon: Building2, label: "Departments", permission: "org.departments.manage" },
+  { href: "/admin/invitations", icon: Mail, label: "Invitations", permission: "org.users.manage" },
+  { href: "/admin/settings", icon: Settings, label: "Settings", permission: null },
 ];
 
 export function OrgSidebar() {
@@ -27,9 +28,10 @@ export function OrgSidebar() {
     enabled: !!me?.id,
   });
 
-  const canManageUsers = myRoles.some((r) => r.permissions?.includes("org.users.manage"));
-
-  const visibleNav = NAV_ITEMS.filter((item) => !item.gated || canManageUsers);
+  const myPermissions = myRoles.flatMap((r) => r.permissions ?? []);
+  const visibleNav = NAV_ITEMS.filter(
+    (item) => item.permission === null || myPermissions.includes(item.permission)
+  );
 
   async function handleSignOut() {
     const refreshToken = localStorage.getItem("portalu_admin_refresh_token");
