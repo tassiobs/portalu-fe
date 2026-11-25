@@ -62,7 +62,10 @@ export default function FieldsPage() {
       toast.success("Field added");
       reset();
     },
-    onError: () => toast.error("Failed to add field"),
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Failed to add field";
+      toast.error(typeof msg === "string" ? msg : JSON.stringify(msg));
+    },
   });
 
   const deleteMutation = useMutation({
