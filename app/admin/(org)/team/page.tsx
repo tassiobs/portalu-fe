@@ -7,11 +7,12 @@ import { Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { listUsers, inviteUser, getMe, getUserRoles } from "@/lib/api/admin";
+import { listUsers, inviteUser, getMe, getUserRoles, listRoles } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const inviteSchema = z.object({
@@ -26,6 +27,7 @@ export default function TeamPage() {
   const [page, setPage] = useState(1);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteError, setInviteError] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["org-users", page],
@@ -40,18 +42,26 @@ export default function TeamPage() {
   });
   const canManage = myRoles.some((r) => r.permissions?.includes("org.users.manage"));
 
+  const { data: allRoles = [] } = useQuery({
+    queryKey: ["org-roles"],
+    queryFn: listRoles,
+    enabled: inviteOpen,
+  });
+  const orgRoles = allRoles.filter((r) => r.level === "org");
+
   const { register, handleSubmit, formState: { errors }, reset } = useForm<InviteForm>({
     resolver: zodResolver(inviteSchema),
   });
 
   const { mutate: invite, isPending: inviting } = useMutation({
-    mutationFn: (d: InviteForm) => inviteUser(d.email, d.name || undefined),
+    mutationFn: (d: InviteForm) => inviteUser(d.email, d.name || undefined, selectedRoleId || undefined),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["org-users"] });
       setInviteOpen(false);
       toast.success("Invitation sent");
       reset();
       setInviteError("");
+      setSelectedRoleId("");
     },
     onError: (err: unknown) => {
       const status = (err as { response?: { status?: number } })?.response?.status;
@@ -71,7 +81,7 @@ export default function TeamPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Team</h1>
         {canManage && (
-          <Button onClick={() => { setInviteError(""); reset(); setInviteOpen(true); }}>
+          <Button onClick={() => { setInviteError(""); setSelectedRoleId(""); reset(); setInviteOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" /> Invite User
           </Button>
         )}
@@ -135,7 +145,7 @@ export default function TeamPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit((d) => invite(d))} className="space-y-4">
             <div className="space-y-1">
-              <Label>Name <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Label>Name</Label>
               <Input {...register("name")} />
             </div>
             <div className="space-y-1">
@@ -144,6 +154,21 @@ export default function TeamPage() {
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
               {inviteError && <p className="text-xs text-destructive">{inviteError}</p>}
             </div>
+            {orgRoles.length > 0 && (
+              <div className="space-y-1">
+                <Label>Role <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="No role assigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orgRoles.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>Cancel</Button>
               <Button type="submit" disabled={inviting}>{inviting ? "Sending…" : "Send Invitation"}</Button>

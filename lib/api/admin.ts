@@ -45,8 +45,8 @@ export const listUsers = (page = 1, perPage = 20) =>
 export const getUser = (userId: string) =>
   adminApi.get<UserDetailOut>(`/api/v1/org/users/${userId}`).then((r) => r.data);
 
-export const inviteUser = (email: string, name?: string) =>
-  adminApi.post("/api/v1/org/users", { email, name }).then((r) => r.data);
+export const inviteUser = (email: string, name?: string, roleId?: string) =>
+  adminApi.post("/api/v1/org/users", { email, name, ...(roleId ? { role_id: roleId } : {}) }).then((r) => r.data);
 
 export const deactivateUser = (userId: string) =>
   adminApi.post(`/api/v1/org/users/${userId}/deactivate`);
