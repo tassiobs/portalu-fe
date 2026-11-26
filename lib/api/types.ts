@@ -75,6 +75,8 @@ export interface SignedUrlOut {
 
 export interface RequestOut {
   id: string;
+  number?: number;
+  reference?: string;
   title: string;
   status: RequestStatus;
   request_type?: RequestTypeOut;
@@ -110,6 +112,8 @@ export interface CitizenOut {
 
 export interface CitizenRequestOut {
   id: string;
+  number?: number;
+  reference?: string;
   title: string;
   status: RequestStatus;
   request_type_id?: string;

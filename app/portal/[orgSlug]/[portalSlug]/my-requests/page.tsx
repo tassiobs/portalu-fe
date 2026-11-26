@@ -37,6 +37,7 @@ export default function MyRequestsPage() {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/50">
             <tr>
+              <th className="px-4 py-3 text-left font-medium">Ref</th>
               <th className="px-4 py-3 text-left font-medium">Title</th>
               <th className="px-4 py-3 text-left font-medium">Status</th>
               <th className="px-4 py-3 text-left font-medium">Submitted</th>
@@ -49,6 +50,9 @@ export default function MyRequestsPage() {
                 className="border-b last:border-0 cursor-pointer hover:bg-muted/30"
                 onClick={() => router.push(`${base}/my-requests/${r.id}`)}
               >
+                <td className="px-4 py-3 font-mono text-muted-foreground text-xs">
+                  #{r.reference ?? r.number}
+                </td>
                 <td className="px-4 py-3 font-medium">{r.title}</td>
                 <td className="px-4 py-3">
                   <Badge variant={r.status as RequestStatus}>{STATUS_LABELS[r.status]}</Badge>
@@ -60,7 +64,7 @@ export default function MyRequestsPage() {
             ))}
             {requests.length === 0 && !isLoading && (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
                   No requests yet.
                 </td>
               </tr>

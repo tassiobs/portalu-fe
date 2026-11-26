@@ -52,6 +52,7 @@ export default function RequestsInboxPage() {
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/50">
             <tr>
+              <th className="px-4 py-3 text-left font-medium">Ref</th>
               <th className="px-4 py-3 text-left font-medium">Title</th>
               <th className="px-4 py-3 text-left font-medium">Status</th>
               <th className="px-4 py-3 text-left font-medium">Created</th>
@@ -64,6 +65,9 @@ export default function RequestsInboxPage() {
                 className="border-b last:border-0 cursor-pointer hover:bg-muted/30"
                 onClick={() => router.push(`/admin/portals/${portalId}/requests/${r.id}`)}
               >
+                <td className="px-4 py-3 font-mono text-muted-foreground text-xs">
+                  #{r.reference ?? r.number}
+                </td>
                 <td className="px-4 py-3 font-medium">{r.title}</td>
                 <td className="px-4 py-3">
                   <Badge variant={r.status as RequestStatus}>{STATUS_LABELS[r.status]}</Badge>
@@ -74,7 +78,7 @@ export default function RequestsInboxPage() {
               </tr>
             ))}
             {requests.length === 0 && !isLoading && (
-              <tr><td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">No requests found.</td></tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No requests found.</td></tr>
             )}
           </tbody>
         </table>

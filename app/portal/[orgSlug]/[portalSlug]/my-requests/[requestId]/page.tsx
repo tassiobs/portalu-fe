@@ -77,8 +77,17 @@ export default function CitizenRequestDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => router.push(`${base}/my-requests`)}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold">{request.title}</h1>
-        <Badge variant={request.status as RequestStatus}>{STATUS_LABELS[request.status]}</Badge>
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">{request.title}</h1>
+            <Badge variant={request.status as RequestStatus}>{STATUS_LABELS[request.status]}</Badge>
+          </div>
+          {(request.reference ?? request.number) && (
+            <span className="text-xs font-mono text-muted-foreground">
+              #{request.reference ?? request.number}
+            </span>
+          )}
+        </div>
       </div>
 
       <Card>
