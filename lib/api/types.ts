@@ -79,11 +79,23 @@ export interface RequestOut {
   reference?: string;
   title: string;
   status: RequestStatus;
+  assigned_to_user_id?: string | null;
+  assigned_to_role_id?: string | null;
   request_type?: RequestTypeOut;
   request_type_id?: string;
   field_values?: FieldValueOut[];
   created_at: string;
   updated_at?: string;
+}
+
+export interface RequestCommentOut {
+  id: string;
+  request_id: string;
+  author_user_id: string;
+  body?: string;
+  file_url?: string;
+  file_name?: string;
+  created_at: string;
 }
 
 export interface TaskInstanceOut {

@@ -1,7 +1,7 @@
 import { adminApi } from "./client";
 import type {
   AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, UserDetailOut, RoleOut,
-  PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut,
+  PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut, RequestCommentOut,
   TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut, InvitationDetailOut,
   PermissionOut, PortalUserOut, SignedUrlOut, DepartmentOut, DepartmentDetailOut,
 } from "./types";
@@ -196,6 +196,36 @@ export const getPortalRequest = (portalId: string, requestId: string) =>
 
 export const updatePortalRequest = (portalId: string, requestId: string, data: { status?: string; title?: string }) =>
   adminApi.patch<RequestOut>(`/api/v1/org/portals/${portalId}/requests/${requestId}`, data).then((r) => r.data);
+
+export const updateRequestAssignment = (
+  portalId: string,
+  requestId: string,
+  data: { assigned_to_user_id: string | null; assigned_to_role_id: string | null }
+) =>
+  adminApi.patch<RequestOut>(`/api/v1/org/portals/${portalId}/requests/${requestId}/assignment`, data).then((r) => r.data);
+
+export const listRequestComments = (portalId: string, requestId: string) =>
+  adminApi.get<RequestCommentOut[]>(`/api/v1/org/portals/${portalId}/requests/${requestId}/comments`).then((r) => r.data);
+
+export const addRequestComment = (
+  portalId: string,
+  requestId: string,
+  data: { body?: string; file_url?: string; file_name?: string }
+) =>
+  adminApi.post<RequestCommentOut>(`/api/v1/org/portals/${portalId}/requests/${requestId}/comments`, data).then((r) => r.data);
+
+export const uploadAdminFile = (portalId: string, file: File, onProgress?: (pct: number) => void) => {
+  const form = new FormData();
+  form.append("file", file);
+  return adminApi.post<{ url: string; file_name: string }>(
+    `/api/v1/org/portals/${portalId}/files`,
+    form,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+      onUploadProgress: (e) => onProgress?.(Math.round((e.loaded * 100) / (e.total ?? 1))),
+    }
+  ).then((r) => r.data);
+};
 
 // Tasks
 export const listTasks = (portalId: string, requestId: string) =>
