@@ -143,7 +143,7 @@ export default function RequestDetailPage() {
       let fileName: string | undefined;
       if (commentFile) {
         const uploaded = await uploadAdminFile(portalId, commentFile, setUploadPct);
-        fileUrl = uploaded.url;
+        fileUrl = uploaded.storage_path;
         fileName = uploaded.file_name;
       }
       return addRequestComment(portalId, requestId, {

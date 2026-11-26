@@ -3,7 +3,7 @@ import type {
   AuthResponse, SignUpResponse, OrgOut, OrgSettingsOut, UserOut, UserDetailOut, RoleOut,
   PortalOut, RequestTypeOut, RequestTypeFieldOut, RequestOut, RequestCommentOut,
   TaskInstanceOut, TaskCommentOut, Pagination, FieldType, InvitationOut, InvitationDetailOut,
-  PermissionOut, PortalUserOut, SignedUrlOut, DepartmentOut, DepartmentDetailOut,
+  PermissionOut, PortalUserOut, SignedUrlOut, FileUploadOut, DepartmentOut, DepartmentDetailOut,
 } from "./types";
 
 // Auth
@@ -217,7 +217,7 @@ export const addRequestComment = (
 export const uploadAdminFile = (portalId: string, file: File, onProgress?: (pct: number) => void) => {
   const form = new FormData();
   form.append("file", file);
-  return adminApi.post<{ url: string; file_name: string }>(
+  return adminApi.post<FileUploadOut>(
     `/api/v1/org/portals/${portalId}/files`,
     form,
     {
